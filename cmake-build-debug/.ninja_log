@@ -1,0 +1,10 @@
+# ninja log v5
+1	274	6765080732585926	build.ninja	d5d18c4cdfb3c193
+2	1070	6766015198415196	CMakeFiles/snakeproject.dir/main.cpp.obj	4fa728f76e35a2c9
+1070	1804	6766015205700594	snakeproject.exe	c62afc76e2be75f1
+3	1052	6766581230490768	CMakeFiles/snakeproject.dir/main.cpp.obj	4fa728f76e35a2c9
+1053	1842	6766581238322395	snakeproject.exe	c62afc76e2be75f1
+3	1063	6766586837782217	CMakeFiles/snakeproject.dir/main.cpp.obj	4fa728f76e35a2c9
+1063	1784	6766586844940635	snakeproject.exe	c62afc76e2be75f1
+2	1104	6766595261896618	CMakeFiles/snakeproject.dir/main.cpp.obj	4fa728f76e35a2c9
+1104	1840	6766595269198797	snakeproject.exe	c62afc76e2be75f1
