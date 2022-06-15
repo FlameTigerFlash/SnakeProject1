@@ -11,12 +11,10 @@ const int SNAKE_DIRECTION_UP = 0;
 const int SNAKE_DIRECTION_RIGHT = 1;
 const int SNAKE_DIRECTION_DOWN = 2;
 const int SNAKE_DIRECTION_LEFT = 3;
-const int LIVES = 3;
 
 const int field_size_x = 35;
 const int field_size_y = 25;
 const int cell_size = 32;
-const int score_bar_height = 60;
 const int window_width = field_size_x * cell_size;
 const int window_height = field_size_y * cell_size;
 
@@ -25,7 +23,10 @@ int snake_position_x = field_size_x / 2;
 int snake_position_y = field_size_y / 2;
 int snake_length = 4;
 int snake_direction = SNAKE_DIRECTION_RIGHT;
+int score = 0;
+bool game_paused = false;
 bool gameOver = false;
+
 
 sf::Texture snake_picture;
 sf::Sprite snake;
@@ -39,10 +40,34 @@ sf::Sprite apple;
 sf::Texture wall_picture;
 sf::Sprite wall;
 
+sf::SoundBuffer sb_ate_apple;
+sf::Sound sound_ate_apple;
+
+sf::SoundBuffer sb_snake_kill_yourself;
+sf::Sound sound_snake_kill_yourself;
+
+sf::SoundBuffer sb_pause_game;
+sf::Sound sound_pause_game;
+
+sf::SoundBuffer sb_snake_dead_from_wall;
+sf::Sound sound_snake_dead_from_wall;
+
+sf::SoundBuffer sb_continue_game;
+sf::Sound sound_continue_game;
+
+sf::SoundBuffer sb_score10;
+sf::Sound sound_score10;
+
+sf::Font font_score;
+sf::Text text_score;
+
+sf::Font font_game_over;
+sf::Text text_game_over;
+
 
 auto init_game()
 {
-    srand(time(NULL));
+    std::srand(time(NULL));
 
     snake_picture.loadFromFile("images/snake.png");
     snake.setTexture(snake_picture);
@@ -56,6 +81,40 @@ auto init_game()
     wall_picture.loadFromFile("images/wall.png");
     wall.setTexture(wall_picture);
 
+    sb_ate_apple.loadFromFile("sounds/get_apple2.wav");
+    sound_ate_apple.setBuffer(sb_ate_apple);
+    sound_ate_apple.setVolume(50);
+
+    sb_snake_kill_yourself.loadFromFile("sounds/died.wav");
+    sound_snake_kill_yourself.setBuffer(sb_snake_kill_yourself);
+    sound_snake_kill_yourself.setVolume(50);
+
+    sb_snake_dead_from_wall.loadFromFile("sounds/dead.wav");
+    sound_snake_dead_from_wall.setBuffer(sb_snake_dead_from_wall);
+    sound_snake_dead_from_wall.setVolume(70);
+
+    sb_pause_game.loadFromFile("sounds/pause_game.wav");
+    sound_pause_game.setBuffer(sb_pause_game);
+    sound_pause_game.setVolume(50);
+
+    sb_continue_game.loadFromFile("sounds/continue_game.wav");
+    sound_continue_game.setBuffer(sb_continue_game);
+    sound_continue_game.setVolume(50);
+
+    sb_score10.loadFromFile("sounds/score10.wav");
+    sound_score10.setBuffer(sb_score10);
+    sound_score10.setVolume(50);
+
+    font_score.loadFromFile("fonts/BigfatScript-2OvA8.otf");
+    text_score.setFont(font_score);
+
+    font_game_over.loadFromFile("fonts/BigOldBoldy-dEjR.ttf");
+    text_game_over.setFont(font_game_over);
+
+    text_game_over.setString("GAME OVER");
+    text_game_over.setCharacterSize(86);
+    text_game_over.setFillColor(sf::Color::Blue);
+    text_game_over.setPosition((window_width - text_game_over.getLocalBounds().width) / 2, (window_height - text_game_over.getLocalBounds().height) / 2);
 }
 
 
@@ -140,10 +199,15 @@ auto draw_field(sf::RenderWindow &window)
                     snake.setPosition(float(i * cell_size), float(j * cell_size));
                     window.draw(snake);
             }
-
-
         }
     }
+    // Draw score_bar//
+    text_score.setString("Score: " + std::to_string(score));
+    text_score.setCharacterSize(28);
+    text_score.setFillColor(sf::Color::Black);
+    text_score.setPosition(window_width / 2 - 65, 0);
+    window.draw(text_score);
+
 }
 
 auto increaseSnake()
@@ -156,7 +220,6 @@ auto increaseSnake()
         }
     }
 }
-
 
 auto movement() {
     switch (snake_direction) {
@@ -187,25 +250,37 @@ auto movement() {
     }
 
     if((field[snake_position_x][snake_position_y]) != FIELD_CELL_TYPE_NONE){
-        switch(field[snake_position_x][snake_position_y]){
+        switch(field[snake_position_x][snake_position_y]) {
             case FIELD_CELL_TYPE_APPLE:
+                sound_ate_apple.play();
                 snake_length += 1;
+                score += 1;
+                if(score % 10 == 0){
+                    sound_score10.play();
+                }
                 increaseSnake();
                 apple_add();
                 break;
-            default:
+            case FIELD_CELL_TYPE_WALL:
+                sound_snake_dead_from_wall.play();
                 gameOver = true;
+                break;
+            default:
+                if (field[snake_position_x][snake_position_y] > 1) {
+                    sound_snake_kill_yourself.play();
+                    gameOver = true;
+                }
         }
     }
-
-    field[snake_position_x][snake_position_y] = snake_length + 1;
-
-    for (int i = 0; i < field_size_x; i++) {
-        for (int j = 0; j < field_size_y; j++) {
-            if (field[i][j] > 0) {
-                field[i][j] -= 1;
+    if(!gameOver) {
+        for (int i = 0; i < field_size_x; i++) {
+            for (int j = 0; j < field_size_y; j++) {
+                if (field[i][j] > 0) {
+                    field[i][j] -= 1;
+                }
             }
         }
+        field[snake_position_x][snake_position_y] = snake_length;
     }
 }
 
@@ -214,7 +289,7 @@ int main()
 {
     init_game();
 
-    srand(time(NULL));
+    std::srand(time(NULL));
 
     sf::RenderWindow window(sf::VideoMode(window_width, window_height), "Snake", sf::Style::Close);
 
@@ -223,93 +298,110 @@ int main()
     std::vector<int> snake_direction_buffer;
 
 
-    while(window.isOpen()){
+    while(window.isOpen()) {
         sf::Event event;
 
-        while(window.pollEvent(event)){
-            if(event.type == sf::Event::Closed)
-             window.close();
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
 
-            if(event.type == sf::Event::KeyPressed){
-             int snake_direction_last = snake_direction_buffer.empty() ? snake_direction : snake_direction_buffer.at(0);
-             switch(event.key.code){
-                 case sf::Keyboard::Up:
-                     if(snake_direction_last != SNAKE_DIRECTION_DOWN) {
-                         if(snake_direction_buffer.size() < 2){
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::Down:
-                     if(snake_direction_last != SNAKE_DIRECTION_UP) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::Left:
-                     if(snake_direction_last != SNAKE_DIRECTION_RIGHT) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::Right:
-                     if(snake_direction_last != SNAKE_DIRECTION_LEFT) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_RIGHT);
-                         }
+            if (event.type == sf::Event::KeyPressed) {
+                if (game_paused) {
+                    switch (event.key.code) {
+                        case sf::Keyboard::Escape:
+                            game_paused = false;
+                            sound_continue_game.play();
+                            break;
+                    }
 
-                     }
-                     break;
-                 case sf::Keyboard::W:
-                     if(snake_direction_last != SNAKE_DIRECTION_DOWN) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::S:
-                     if(snake_direction_last != SNAKE_DIRECTION_UP) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::A:
-                     if(snake_direction_last != SNAKE_DIRECTION_RIGHT) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::D:
-                     if(snake_direction_last != SNAKE_DIRECTION_LEFT) {
-                         if(snake_direction_buffer.size() < 2) {
-                             snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_RIGHT);
-                         }
-                     }
-                     break;
-                 case sf::Keyboard::Escape:
-                     gameOver = true;
-                     break;
-             }
-             if(!snake_direction_buffer.empty()){
-                 snake_direction = snake_direction_buffer.back(); //Возвращает последний элемент вектора
-                 snake_direction_buffer.pop_back();
+                } else {
+                    int snake_direction_last = snake_direction_buffer.empty() ? snake_direction : snake_direction_buffer.at(0);
+                    switch (event.key.code) {
+                        case sf::Keyboard::Up:
+                            if (snake_direction_last != SNAKE_DIRECTION_DOWN) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::Down:
+                            if (snake_direction_last != SNAKE_DIRECTION_UP) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::Left:
+                            if (snake_direction_last != SNAKE_DIRECTION_RIGHT) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::Right:
+                            if (snake_direction_last != SNAKE_DIRECTION_LEFT) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(),SNAKE_DIRECTION_RIGHT);
+                                }
 
-             }
-         }
+                            }
+                            break;
+                        case sf::Keyboard::W:
+                            if (snake_direction_last != SNAKE_DIRECTION_DOWN) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::S:
+                            if (snake_direction_last != SNAKE_DIRECTION_UP) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::A:
+                            if (snake_direction_last != SNAKE_DIRECTION_RIGHT) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::D:
+                            if (snake_direction_last != SNAKE_DIRECTION_LEFT) {
+                                if (snake_direction_buffer.size() < 2) {
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(),SNAKE_DIRECTION_RIGHT);
+                                }
+                            }
+                            break;
+                        case sf::Keyboard::Escape:
+                            game_paused = true;
+                            sound_pause_game.play();
+                            break;
+                    }
+                    if (!snake_direction_buffer.empty()) {
+                        snake_direction = snake_direction_buffer.back(); // Возвращает последний элемент вектора //
+                        snake_direction_buffer.pop_back();
+
+                    }
+                }
+            }
         }
 
+        if (!game_paused) {
         movement();
-
-        if(gameOver){
-            window.close();
         }
+
         window.clear(sf::Color(150, 212, 140));
 
         draw_field(window);
+
+        if(gameOver){
+            window.draw(text_game_over);
+            window.display();
+            sf::sleep(sf::seconds(2));
+            window.close();
+        }
 
         window.display();
 

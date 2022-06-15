@@ -12,4 +12,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 
 add_executable(snakeproject main.cpp)
 
-target_link_libraries(snakeproject PUBLIC default sfml-graphics sfml-window sfml-system)
+target_link_libraries(snakeproject PUBLIC default sfml-audio sfml-graphics sfml-window sfml-system)
