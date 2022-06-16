@@ -104,10 +104,10 @@ auto init_game()
     sound_score10.setBuffer(sb_score10);
     sound_score10.setVolume(45);
 
-    font_score.loadFromFile("fonts/BigfatScript-2OvA8.otf");
+    font_score.loadFromFile("fonts/BigFat.otf");
     text_score.setFont(font_score);
 
-    font_game_over.loadFromFile("fonts/BigOldBoldy-dEjR.ttf");
+    font_game_over.loadFromFile("fonts/BigOld.ttf");
     text_game_over.setFont(font_game_over);
 
     text_game_over.setString("GAME OVER");
@@ -226,8 +226,8 @@ auto draw_field(sf::RenderWindow &window)
     // Draw score_bar//
     text_score.setString("Score: " + std::to_string(score));
     text_score.setCharacterSize(28);
-    if(score > 50){
-        text_score.setFillColor(sf::Color::Red);
+    if(score >= 20){
+        text_score.setFillColor(sf::Color::Blue);
         text_score.setPosition(window_width / 2 - 65, 0);
         window.draw(text_score);
     }
@@ -326,9 +326,10 @@ int main()
 
     std::vector<int> snake_direction_buffer;
 
-
     while(window.isOpen()) {
         sf::Event event;
+
+
 
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
@@ -424,6 +425,8 @@ int main()
                 }
             }
         }
+
+
 
         if (!game_paused) {
         movement();
