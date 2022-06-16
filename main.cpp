@@ -4,13 +4,13 @@
 #include <vector>
 #include <string>
 
-const int FIELD_CELL_TYPE_NONE = 0;
-const int FIELD_CELL_TYPE_APPLE =  -1;
-const int FIELD_CELL_TYPE_WALL = -2;
-const int SNAKE_DIRECTION_UP = 0;
-const int SNAKE_DIRECTION_RIGHT = 1;
-const int SNAKE_DIRECTION_DOWN = 2;
-const int SNAKE_DIRECTION_LEFT = 3;
+const int field_cell_type_none = 0;
+const int field_cell_type_apple =  -1;
+const int field_cell_type_wall = -2;
+const int snake_direction_up = 0;
+const int snake_direction_right = 1;
+const int snake_direction_down = 2;
+const int snake_direction_left = 3;
 
 const int field_size_x = 35;
 const int field_size_y = 25;
@@ -22,12 +22,11 @@ int field[field_size_x][field_size_y];
 int snake_position_x = field_size_x / 2;
 int snake_position_y = field_size_y / 2;
 int snake_length = 4;
-int snake_direction = SNAKE_DIRECTION_RIGHT;
+int snake_direction = snake_direction_right;
 int score = 0;
 
 bool game_paused = false;
 bool game_over = false;
-
 
 sf::Texture snake_picture;
 sf::Sprite snake;
@@ -87,7 +86,7 @@ auto init_game()
 
     sb_ate_apple.loadFromFile("sounds/get_apple2.wav");
     sound_ate_apple.setBuffer(sb_ate_apple);
-    sound_ate_apple.setVolume(50);
+    sound_ate_apple.setVolume(40);
 
     sb_snake_kill_yourself.loadFromFile("sounds/died.wav");
     sound_snake_kill_yourself.setBuffer(sb_snake_kill_yourself);
@@ -123,7 +122,7 @@ auto get_random_empty_cell()
     int empty_cell_count = 0;
     for (int j = 0; j < field_size_y; j++) {
         for (int i = 0; i < field_size_x; i++) {
-            if (field[j][i] == FIELD_CELL_TYPE_NONE) {
+            if (field[j][i] == field_cell_type_none) {
                 empty_cell_count++;
             }
         }
@@ -132,7 +131,7 @@ auto get_random_empty_cell()
     int empty_cell_index = 0;
     for (int j = 0; j < field_size_y; j++) {
         for (int i = 0; i < field_size_x; i++) {
-            if (field[j][i] == FIELD_CELL_TYPE_NONE) {
+            if (field[j][i] == field_cell_type_none) {
                 if (empty_cell_index == target_empty_cell_index) {
                     return j * field_size_x + i;
                 }
@@ -147,7 +146,7 @@ auto apple_add()
 {
     int applePosition = get_random_empty_cell();
     if (applePosition != -1) {
-        field[applePosition / field_size_x][applePosition % field_size_x] = FIELD_CELL_TYPE_APPLE;
+        field[applePosition / field_size_x][applePosition % field_size_x] = field_cell_type_apple;
     }
 }
 
@@ -164,14 +163,14 @@ auto clear_field()
     }
     for(int i = 0; i < field_size_x; i += 1){
         if(i < 6 || (field_size_x - i - 1) < 6) {
-            field[i][0] = FIELD_CELL_TYPE_WALL;
-            field[i][field_size_y - 1] = FIELD_CELL_TYPE_WALL;
+            field[i][0] = field_cell_type_wall;
+            field[i][field_size_y - 1] = field_cell_type_wall;
         }
     }
     for(int i = 0; i < field_size_y; i += 1){
         if(i < 6 || (field_size_y -i - 1) < 6) {
-            field[0][i] = FIELD_CELL_TYPE_WALL;
-            field[field_size_x - 1][i] = FIELD_CELL_TYPE_WALL;
+            field[0][i] = field_cell_type_wall;
+            field[field_size_x - 1][i] = field_cell_type_wall;
         }
     }
     apple_add();
@@ -183,15 +182,15 @@ auto draw_field(sf::RenderWindow &window)
     for(int i = 0; i < field_size_x; i++){
         for (int j = 0; j < field_size_y; j++){
             switch(field[i][j]) {
-                case FIELD_CELL_TYPE_NONE:
+                case field_cell_type_none:
                     none.setPosition(float(i * cell_size), float(j * cell_size));
                     window.draw(none);
                     break;
-                case FIELD_CELL_TYPE_APPLE:
+                case field_cell_type_apple:
                     apple.setPosition(float(i * cell_size), float(j * cell_size));
                     window.draw(apple);
                     break;
-                case FIELD_CELL_TYPE_WALL:
+                case field_cell_type_wall:
                     wall.setPosition(float(i * cell_size), float(j * cell_size));
                     window.draw(wall);
                     break;
@@ -202,16 +201,16 @@ auto draw_field(sf::RenderWindow &window)
                         snake_head.setPosition(float(i * cell_size + offset_x), float(j * cell_size) + offset_y);
                         snake_head.setOrigin(offset_x,offset_y);
                         switch(snake_direction){
-                            case SNAKE_DIRECTION_UP:
+                            case snake_direction_up:
                                 snake_head.setRotation(90);
                                 break;
-                            case SNAKE_DIRECTION_RIGHT:
+                            case snake_direction_right:
                                 snake_head.setRotation(-180);
                                 break;
-                            case SNAKE_DIRECTION_LEFT:
+                            case snake_direction_left:
                                 snake_head.setRotation(0);
                                 break;
-                            case SNAKE_DIRECTION_DOWN:
+                            case snake_direction_down:
                                 snake_head.setRotation(-90);
                                 break;
                         }
@@ -244,7 +243,7 @@ auto increaseSnake()
 {
     for(int i = 0; i < field_size_x; i++) {
         for (int j = 0; j < field_size_y; j++) {
-            if (field[i][j] > FIELD_CELL_TYPE_NONE) {
+            if (field[i][j] > field_cell_type_none) {
                 field[i][j] += 1;
             }
         }
@@ -253,25 +252,25 @@ auto increaseSnake()
 
 auto movement() {
     switch (snake_direction) {
-        case SNAKE_DIRECTION_UP:
+        case snake_direction_up:
             snake_position_y -= 1;
             if (snake_position_y < 0){
                 snake_position_y = field_size_y - 1;
             }
             break;
-        case SNAKE_DIRECTION_RIGHT:
+        case snake_direction_right:
             snake_position_x += 1;
             if (snake_position_x > field_size_x - 1){
                 snake_position_x = 0;
             }
             break;
-        case SNAKE_DIRECTION_DOWN:
+        case snake_direction_down:
             snake_position_y += 1;
             if (snake_position_y > field_size_y - 1){
                 snake_position_y = 0;
             }
             break;
-        case SNAKE_DIRECTION_LEFT:
+        case snake_direction_left:
             snake_position_x -= 1;
             if (snake_position_x < 0){
                 snake_position_x = field_size_x - 1;
@@ -279,9 +278,9 @@ auto movement() {
             break;
     }
 
-    if((field[snake_position_x][snake_position_y]) != FIELD_CELL_TYPE_NONE){
+    if((field[snake_position_x][snake_position_y]) != field_cell_type_none){
         switch(field[snake_position_x][snake_position_y]) {
-            case FIELD_CELL_TYPE_APPLE:
+            case field_cell_type_apple:
                 sound_ate_apple.play();
                 snake_length += 1;
                 score += 1;
@@ -291,7 +290,7 @@ auto movement() {
                 increaseSnake();
                 apple_add();
                 break;
-            case FIELD_CELL_TYPE_WALL:
+            case field_cell_type_wall:
                 sound_snake_dead_from_wall.play();
                 game_over = true;
                 break;
@@ -351,59 +350,59 @@ int main()
                     int snake_direction_last = snake_direction_buffer.empty() ? snake_direction : snake_direction_buffer.at(0);
                     switch (event.key.code) {
                         case sf::Keyboard::Up:
-                            if (snake_direction_last != SNAKE_DIRECTION_DOWN) {
+                            if (snake_direction_last != snake_direction_down) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_up);
                                 }
                             }
                             break;
                         case sf::Keyboard::Down:
-                            if (snake_direction_last != SNAKE_DIRECTION_UP) {
+                            if (snake_direction_last != snake_direction_up) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_down);
                                 }
                             }
                             break;
                         case sf::Keyboard::Left:
-                            if (snake_direction_last != SNAKE_DIRECTION_RIGHT) {
+                            if (snake_direction_last != snake_direction_right) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_left);
                                 }
                             }
                             break;
                         case sf::Keyboard::Right:
-                            if (snake_direction_last != SNAKE_DIRECTION_LEFT) {
+                            if (snake_direction_last != snake_direction_left) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(),SNAKE_DIRECTION_RIGHT);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_right);
                                 }
 
                             }
                             break;
                         case sf::Keyboard::W:
-                            if (snake_direction_last != SNAKE_DIRECTION_DOWN) {
+                            if (snake_direction_last != snake_direction_down) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_UP);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_up);
                                 }
                             }
                             break;
                         case sf::Keyboard::S:
-                            if (snake_direction_last != SNAKE_DIRECTION_UP) {
+                            if (snake_direction_last != snake_direction_up) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_DOWN);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_down);
                                 }
                             }
                             break;
                         case sf::Keyboard::A:
-                            if (snake_direction_last != SNAKE_DIRECTION_RIGHT) {
+                            if (snake_direction_last != snake_direction_right) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), SNAKE_DIRECTION_LEFT);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_left);
                                 }
                             }
                             break;
                         case sf::Keyboard::D:
-                            if (snake_direction_last != SNAKE_DIRECTION_LEFT) {
+                            if (snake_direction_last != snake_direction_left) {
                                 if (snake_direction_buffer.size() < 2) {
-                                    snake_direction_buffer.insert(snake_direction_buffer.begin(),SNAKE_DIRECTION_RIGHT);
+                                    snake_direction_buffer.insert(snake_direction_buffer.begin(), snake_direction_right);
                                 }
                             }
                             break;
