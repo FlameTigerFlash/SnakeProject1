@@ -25,7 +25,7 @@ int snake_length = 4;
 int snake_direction = SNAKE_DIRECTION_RIGHT;
 int score = 0;
 bool game_paused = false;
-bool gameOver = false;
+bool game_over = false;
 
 
 sf::Texture snake_picture;
@@ -40,6 +40,9 @@ sf::Sprite apple;
 sf::Texture wall_picture;
 sf::Sprite wall;
 
+sf::Texture snake_head_picture;
+sf::Sprite snake_head;
+
 sf::SoundBuffer sb_ate_apple;
 sf::Sound sound_ate_apple;
 
@@ -51,9 +54,6 @@ sf::Sound sound_pause_game;
 
 sf::SoundBuffer sb_snake_dead_from_wall;
 sf::Sound sound_snake_dead_from_wall;
-
-sf::SoundBuffer sb_continue_game;
-sf::Sound sound_continue_game;
 
 sf::SoundBuffer sb_score10;
 sf::Sound sound_score10;
@@ -81,6 +81,9 @@ auto init_game()
     wall_picture.loadFromFile("images/wall.png");
     wall.setTexture(wall_picture);
 
+    snake_head_picture.loadFromFile("images/head.png");
+    snake_head.setTexture(snake_head_picture);
+
     sb_ate_apple.loadFromFile("sounds/get_apple2.wav");
     sound_ate_apple.setBuffer(sb_ate_apple);
     sound_ate_apple.setVolume(50);
@@ -95,15 +98,11 @@ auto init_game()
 
     sb_pause_game.loadFromFile("sounds/pause_game.wav");
     sound_pause_game.setBuffer(sb_pause_game);
-    sound_pause_game.setVolume(50);
-
-    sb_continue_game.loadFromFile("sounds/continue_game.wav");
-    sound_continue_game.setBuffer(sb_continue_game);
-    sound_continue_game.setVolume(50);
+    sound_pause_game.setVolume(20);
 
     sb_score10.loadFromFile("sounds/score10.wav");
     sound_score10.setBuffer(sb_score10);
-    sound_score10.setVolume(50);
+    sound_score10.setVolume(45);
 
     font_score.loadFromFile("fonts/BigfatScript-2OvA8.otf");
     text_score.setFont(font_score);
@@ -114,7 +113,7 @@ auto init_game()
     text_game_over.setString("GAME OVER");
     text_game_over.setCharacterSize(86);
     text_game_over.setFillColor(sf::Color::Blue);
-    text_game_over.setPosition((window_width - text_game_over.getLocalBounds().width) / 2, (window_height - text_game_over.getLocalBounds().height) / 2);
+    text_game_over.setPosition((window_width - text_game_over.getLocalBounds().width) / 2, (window_height - text_game_over.getLocalBounds().height) / 2 - 30);
 }
 
 
@@ -196,17 +195,47 @@ auto draw_field(sf::RenderWindow &window)
                     window.draw(wall);
                     break;
                 default:
-                    snake.setPosition(float(i * cell_size), float(j * cell_size));
-                    window.draw(snake);
+                    if(field[i][j] == snake_length){
+                        float offset_x = snake_head.getLocalBounds().width / 2;
+                        float offset_y = snake_head.getLocalBounds().height / 2;
+                        snake_head.setPosition(float(i * cell_size + offset_x), float(j * cell_size) + offset_y);
+                        snake_head.setOrigin(offset_x,offset_y);
+                        switch(snake_direction){
+                            case SNAKE_DIRECTION_UP:
+                                snake_head.setRotation(90);
+                                break;
+                            case SNAKE_DIRECTION_RIGHT:
+                                snake_head.setRotation(-180);
+                                break;
+                            case SNAKE_DIRECTION_LEFT:
+                                snake_head.setRotation(0);
+                                break;
+                            case SNAKE_DIRECTION_DOWN:
+                                snake_head.setRotation(-90);
+                                break;
+                        }
+                        window.draw(snake_head);
+                    }
+                    else{
+                        snake.setPosition(float(i * cell_size), float(j * cell_size));
+                        window.draw(snake);
+                    }
             }
         }
     }
     // Draw score_bar//
     text_score.setString("Score: " + std::to_string(score));
     text_score.setCharacterSize(28);
-    text_score.setFillColor(sf::Color::Black);
-    text_score.setPosition(window_width / 2 - 65, 0);
-    window.draw(text_score);
+    if(score > 50){
+        text_score.setFillColor(sf::Color::Red);
+        text_score.setPosition(window_width / 2 - 65, 0);
+        window.draw(text_score);
+    }
+    else{
+        text_score.setFillColor(sf::Color::Black);
+        text_score.setPosition(window_width / 2 - 65, 0);
+        window.draw(text_score);
+    }
 
 }
 
@@ -263,16 +292,16 @@ auto movement() {
                 break;
             case FIELD_CELL_TYPE_WALL:
                 sound_snake_dead_from_wall.play();
-                gameOver = true;
+                game_over = true;
                 break;
             default:
                 if (field[snake_position_x][snake_position_y] > 1) {
                     sound_snake_kill_yourself.play();
-                    gameOver = true;
+                    game_over = true;
                 }
         }
     }
-    if(!gameOver) {
+    if(!game_over) {
         for (int i = 0; i < field_size_x; i++) {
             for (int j = 0; j < field_size_y; j++) {
                 if (field[i][j] > 0) {
@@ -310,7 +339,11 @@ int main()
                     switch (event.key.code) {
                         case sf::Keyboard::Escape:
                             game_paused = false;
-                            sound_continue_game.play();
+                            sound_pause_game.play();
+                            break;
+                        case sf::Keyboard::G:
+                            game_over = true;
+                            sound_snake_dead_from_wall.play();
                             break;
                     }
 
@@ -378,6 +411,10 @@ int main()
                             game_paused = true;
                             sound_pause_game.play();
                             break;
+                        case sf::Keyboard::G:
+                            game_over = true;
+                            sound_snake_dead_from_wall.play();
+                            break;
                     }
                     if (!snake_direction_buffer.empty()) {
                         snake_direction = snake_direction_buffer.back(); // Возвращает последний элемент вектора //
@@ -396,7 +433,7 @@ int main()
 
         draw_field(window);
 
-        if(gameOver){
+        if(game_over){
             window.draw(text_game_over);
             window.display();
             sf::sleep(sf::seconds(2));
