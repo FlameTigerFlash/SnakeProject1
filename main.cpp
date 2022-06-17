@@ -5,13 +5,12 @@
 #include <string>
 
 const int field_cell_type_none = 0;
-const int field_cell_type_apple =  -1;
+const int field_cell_type_apple = -1;
 const int field_cell_type_wall = -2;
 const int snake_direction_up = 0;
 const int snake_direction_right = 1;
 const int snake_direction_down = 2;
 const int snake_direction_left = 3;
-
 const int field_size_x = 35;
 const int field_size_y = 25;
 const int cell_size = 32;
@@ -27,6 +26,8 @@ int score = 0;
 
 bool game_paused = false;
 bool game_over = false;
+int mode = 0;
+
 
 sf::Texture snake_picture;
 sf::Sprite snake;
@@ -153,22 +154,22 @@ auto apple_add()
 
 auto clear_field()
 {
-    for(int i = 0; i < field_size_x; i++){
-        for (int j = 0; j < field_size_y; j++){
+    for (int i = 0; i < field_size_x; i++) {
+        for (int j = 0; j < field_size_y; j++) {
             field[i][j] = 0;
         }
     }
-    for(int i = 0; i < snake_length; i++){
-       field[snake_position_x - i][snake_position_y] = snake_length - i;
+    for (int i = 0; i < snake_length; i++) {
+        field[snake_position_x - i][snake_position_y] = snake_length - i;
     }
-    for(int i = 0; i < field_size_x; i += 1){
-        if(i < 6 || (field_size_x - i - 1) < 6) {
+    for (int i = 0; i < field_size_x; i += 1) {
+        if (i < 6 || (field_size_x - i - 1) < 6) {
             field[i][0] = field_cell_type_wall;
             field[i][field_size_y - 1] = field_cell_type_wall;
         }
     }
-    for(int i = 0; i < field_size_y; i += 1){
-        if(i < 6 || (field_size_y -i - 1) < 6) {
+    for (int i = 0; i < field_size_y; i += 1) {
+        if (i < 6 || (field_size_y - i - 1) < 6) {
             field[0][i] = field_cell_type_wall;
             field[field_size_x - 1][i] = field_cell_type_wall;
         }
@@ -176,12 +177,12 @@ auto clear_field()
     apple_add();
 }
 
-auto draw_field(sf::RenderWindow &window)
+auto draw_field(sf::RenderWindow& window)
 {
 
-    for(int i = 0; i < field_size_x; i++){
-        for (int j = 0; j < field_size_y; j++){
-            switch(field[i][j]) {
+    for (int i = 0; i < field_size_x; i++) {
+        for (int j = 0; j < field_size_y; j++) {
+            switch (field[i][j]) {
                 case field_cell_type_none:
                     none.setPosition(float(i * cell_size), float(j * cell_size));
                     window.draw(none);
@@ -195,12 +196,12 @@ auto draw_field(sf::RenderWindow &window)
                     window.draw(wall);
                     break;
                 default:
-                    if(field[i][j] == snake_length){
+                    if (field[i][j] == snake_length) {
                         float offset_x = snake_head.getLocalBounds().width / 2;
                         float offset_y = snake_head.getLocalBounds().height / 2;
                         snake_head.setPosition(float(i * cell_size + offset_x), float(j * cell_size) + offset_y);
-                        snake_head.setOrigin(offset_x,offset_y);
-                        switch(snake_direction){
+                        snake_head.setOrigin(offset_x, offset_y);
+                        switch (snake_direction) {
                             case snake_direction_up:
                                 snake_head.setRotation(90);
                                 break;
@@ -216,7 +217,7 @@ auto draw_field(sf::RenderWindow &window)
                         }
                         window.draw(snake_head);
                     }
-                    else{
+                    else {
                         snake.setPosition(float(i * cell_size), float(j * cell_size));
                         window.draw(snake);
                     }
@@ -226,12 +227,12 @@ auto draw_field(sf::RenderWindow &window)
     // Draw score_bar//
     text_score.setString("Score: " + std::to_string(score));
     text_score.setCharacterSize(28);
-    if(score >= 20){
+    if (score >= 20) {
         text_score.setFillColor(sf::Color::Blue);
         text_score.setPosition(window_width / 2 - 65, 0);
         window.draw(text_score);
     }
-    else{
+    else {
         text_score.setFillColor(sf::Color::Black);
         text_score.setPosition(window_width / 2 - 65, 0);
         window.draw(text_score);
@@ -241,7 +242,7 @@ auto draw_field(sf::RenderWindow &window)
 
 auto increaseSnake()
 {
-    for(int i = 0; i < field_size_x; i++) {
+    for (int i = 0; i < field_size_x; i++) {
         for (int j = 0; j < field_size_y; j++) {
             if (field[i][j] > field_cell_type_none) {
                 field[i][j] += 1;
@@ -254,37 +255,37 @@ auto movement() {
     switch (snake_direction) {
         case snake_direction_up:
             snake_position_y -= 1;
-            if (snake_position_y < 0){
+            if (snake_position_y < 0) {
                 snake_position_y = field_size_y - 1;
             }
             break;
         case snake_direction_right:
             snake_position_x += 1;
-            if (snake_position_x > field_size_x - 1){
+            if (snake_position_x > field_size_x - 1) {
                 snake_position_x = 0;
             }
             break;
         case snake_direction_down:
             snake_position_y += 1;
-            if (snake_position_y > field_size_y - 1){
+            if (snake_position_y > field_size_y - 1) {
                 snake_position_y = 0;
             }
             break;
         case snake_direction_left:
             snake_position_x -= 1;
-            if (snake_position_x < 0){
+            if (snake_position_x < 0) {
                 snake_position_x = field_size_x - 1;
             }
             break;
     }
 
-    if((field[snake_position_x][snake_position_y]) != field_cell_type_none){
-        switch(field[snake_position_x][snake_position_y]) {
+    if ((field[snake_position_x][snake_position_y]) != field_cell_type_none) {
+        switch (field[snake_position_x][snake_position_y]) {
             case field_cell_type_apple:
                 sound_ate_apple.play();
                 snake_length += 1;
                 score += 1;
-                if(score % 10 == 0){
+                if (score % 10 == 0) {
                     sound_score10.play();
                 }
                 increaseSnake();
@@ -301,7 +302,7 @@ auto movement() {
                 }
         }
     }
-    if(!game_over) {
+    if (!game_over) {
         for (int i = 0; i < field_size_x; i++) {
             for (int j = 0; j < field_size_y; j++) {
                 if (field[i][j] > 0) {
@@ -314,7 +315,7 @@ auto movement() {
 }
 
 
-int main()
+auto game()
 {
     init_game();
 
@@ -326,7 +327,7 @@ int main()
 
     std::vector<int> snake_direction_buffer;
 
-    while(window.isOpen()) {
+    while (window.isOpen()) {
         sf::Event event;
 
         while (window.pollEvent(event)) {
@@ -346,7 +347,8 @@ int main()
                             break;
                     }
 
-                } else {
+                }
+                else {
                     int snake_direction_last = snake_direction_buffer.empty() ? snake_direction : snake_direction_buffer.at(0);
                     switch (event.key.code) {
                         case sf::Keyboard::Up:
@@ -427,14 +429,14 @@ int main()
 
 
         if (!game_paused) {
-        movement();
+            movement();
         }
 
         window.clear(sf::Color(150, 212, 140));
 
         draw_field(window);
 
-        if(game_over){
+        if (game_over) {
             window.draw(text_game_over);
             window.display();
             sf::sleep(sf::seconds(2));
@@ -447,4 +449,16 @@ int main()
     }
     return 0;
 }
-
+int test();
+int main()
+{
+    setlocale(LC_ALL, "ru");
+    if (mode == 0)
+    {
+        game();
+    }
+    else
+    {
+        test();
+    }
+}
