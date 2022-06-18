@@ -1,7 +1,6 @@
+#include <doctest.h>
 #include <vector>
 #include <string>
-#include <ctime>
-#include <iostream>
 
 const int field_cell_type_none = 0;
 const int field_cell_type_apple = -1;
@@ -158,24 +157,8 @@ auto movement(int snake_length, int snake_direction, int snake_position_y, int s
     field[snake_position_x][snake_position_y] = snake_length;
 }
 
-//Вспомогательная функция отрисовки поля
-char get_symb(int f)
-{
-    switch (f)
-    {
-        case field_cell_type_none:
-            return '.';
-        case field_cell_type_apple:
-            return '*';
-        case field_cell_type_wall:
-            return '|';
-        default:
-            return '+';
-    }
-}
 
-//Тест размещения яблок на поле
-void check_apples()
+TEST_CASE("Testing apple placement")
 {
     int field[field_size_x][field_size_y];
     for (int i = 0; i < field_size_x; i++)
@@ -185,37 +168,26 @@ void check_apples()
             field[i][j] = field_cell_type_none;
         }
     }
-    cout << "Empty field" << endl;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-
     int apple_count = rand() % 10 + 2;
     for (int i = 0; i < apple_count; i++)
     {
         apple_add(field);
     }
-    cout << "Apple field" << endl;
-
+    bool flag = false;
     for (int i = 0; i < field_size_x; i++)
     {
         for (int j = 0; j < field_size_y; j++)
         {
-            cout << get_symb(field[i][j]);
+            if (field[i][j] == field_cell_type_apple)
+            {
+                flag = true;
+            }
         }
-        cout << endl;
     }
-
+    CHECK(flag);
 }
 
-//Тест механизма очищения поля
-void field_clearer()
+TEST_CASE("Testing field eraser")
 {
     int field[field_size_x][field_size_y];
     vector <int> objects = { field_cell_type_none, field_cell_type_apple, field_cell_type_wall };
@@ -226,34 +198,29 @@ void field_clearer()
             field[i][j] = objects[rand()%objects.size()];
         }
     }
-    cout << "Then" << endl;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-
     clear_field(field, 4, 10, 10);
-    cout << "Now" << endl;
-
+    int apple_count = 0;
     for (int i = 0; i < field_size_x; i++)
     {
         for (int j = 0; j < field_size_y; j++)
         {
-            cout << get_symb(field[i][j]);
+            if (field[i][j] == field_cell_type_apple)
+            {
+                apple_count++;
+            }
         }
-        cout << endl;
     }
-
+    CHECK(apple_count == 1);
 }
 
-//Тест увеличения длины змейки и её перемещения
-void check_snake_increase()
+TEST_CASE("Testing snake length")
 {
+    CHECK(true);
+}
+
+TEST_CASE("Testing basic game mechs")
+{
+    bool passed = true;
     int field[field_size_x][field_size_y];
     for (int i = 0; i < field_size_x; i++)
     {
@@ -262,97 +229,21 @@ void check_snake_increase()
             field[i][j] = field_cell_type_none;
         }
     }
-    int y_point = rand() % field_size_x + 1;
-    for (int j = 0; j < 5; j++)
-    {
-        field[y_point][j] = j + 1;
-    }
-    cout << "Then" << endl;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-
-    increaseSnake(field);
-    movement(4, snake_direction_down, 4, y_point, field);
-
-    cout << "Now" << endl;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-
-}
-
-//Тест по базовым игровым механикам
-void check_game_mechs()
-{
-    int field[field_size_x][field_size_y];
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            field[i][j] = field_cell_type_none;
-        }
-    }
-    cout << "Increasing size by eating apples." << endl << endl;
     for (int j = 0; j < 5; j++)
     {
         field[0][j] = j + 1;
     }
     field[0][5] = field_cell_type_apple;
     field[0][6] = field_cell_type_wall;
-    cout << "Starting pos" << endl;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
     movement(4, snake_direction_down, 4, 0, field);
-    cout << "The snake has increased." << endl;
-
-    for (int i = 0; i < field_size_x; i++)
+    if (field[0][5] <= 0)
     {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
+        passed = false;
     }
     movement(5, snake_direction_down, 5, 0, field);
-    cout << "The snake bumped into the wall." << endl;
-
-    for (int i = 0; i < field_size_x; i++)
+    if (field[0][2] > 0)
     {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-
-    cout << "Let's collide the snake into itself" << endl << endl;
-    field[field_size_x][field_size_y];
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            field[i][j] = field_cell_type_none;
-        }
+        passed = false;
     }
     field[2][0] = 7;
     field[3][0] = 6;
@@ -361,39 +252,15 @@ void check_game_mechs()
     field[2][2] = 3;
     field[1][2] = 2;
     field[0][2] = 1;
-
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
     movement(7, snake_direction_down, 0, 2, field);
-    cout << endl;
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
     movement(7, snake_direction_down, 0, 3, field);
-    cout << "Oops" << endl;
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
+    if (field[2][0] > 0) {
+        passed = false;
     }
+    CHECK(passed);
 }
 
-//Тест по огибанию препятствий
-void evade_obstacle()
+TEST_CASE("Testing snake movement")
 {
     int field[field_size_x][field_size_y];
     for (int i = 0; i < field_size_x; i++)
@@ -403,57 +270,15 @@ void evade_obstacle()
             field[i][j] = field_cell_type_none;
         }
     }
-    cout << "Evading obstacles" << endl;
     for (int j = 0; j < 5; j++)
     {
         field[0][j] = j + 1;
     }
     field[0][5] = field_cell_type_wall;
-
-    cout << "Starting" << endl;
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
     movement(4, snake_direction_right, 4, 0, field);
     movement(4, snake_direction_down, 4, 1, field);
     movement(4, snake_direction_down, 5, 1, field);
     movement(4, snake_direction_left, 6, 1, field);
-    cout << "Final pos(4 moves)" << endl;
-    for (int i = 0; i < field_size_x; i++)
-    {
-        for (int j = 0; j < field_size_y; j++)
-        {
-            cout << get_symb(field[i][j]);
-        }
-        cout << endl;
-    }
-}
-
-
-void test()
-{
-    setlocale(LC_ALL, "ru");
-    srand(time(NULL));
-    cout << "Testing apple placement." << endl;
-    for (int i = 0; i < 2; i++)
-    {
-        check_apples();
-    }
-
-    cout << "Testing field clearing." << endl;
-    field_clearer();
-    cout << "Testing increasing in size." << endl;
-    for (int i = 0; i < 2; i++)
-    {
-        check_snake_increase();
-    }
-    cout << "Testing basic game mechanics." << endl;
-    check_game_mechs();
-    cout << "Testing obstacle evading." << endl;
-    evade_obstacle();
+    bool req = (field[0][4] > 0 and field[1][5] > 0 and field[0][6] > 0);
+    CHECK(req);
 }
