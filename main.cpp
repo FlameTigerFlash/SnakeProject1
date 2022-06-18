@@ -449,16 +449,9 @@ auto game()
     }
     return 0;
 }
-int test();
 int main()
 {
     setlocale(LC_ALL, "ru");
-    if (mode == 0)
-    {
-        game();
-    }
-    else
-    {
-        test();
-    }
+     game();
+    return 0;
 }
